@@ -35,24 +35,39 @@ class BoardView {
 
         // Handle piece click and piece move
         let that = this;
-        this._canvas.addEventListener('mousedown', function(e) {that.mouseClick(e)});
-        this._canvas.addEventListener('mouseup', function(e) {that.mouseClick(e)});
+        this._canvas.addEventListener('mousedown', function(e) {that.mouseDown(e)});
+        this._canvas.addEventListener('mouseup', function(e) {that.mouseUp(e)});
     }
 
-    mouseClick(event: MouseEvent) {
+    mouseDown(event: MouseEvent) {
         let point = this.parseToCoord(event);
         let moves = this._board.getMoves(point);
-        if(event.type == "mousedown") {
-            for(let move of moves) {
-                this.highlightPiece(move);
-            }
-            this._highlightedPoints = moves;
-        } else if(event.type == "mouseup") {
-            for(let move of this._highlightedPoints) {
-                this.unhighlightPiece(move);
-            }
-            this._highlightedPoints = [];
+        for(let i = 0; i < moves.length-1; i++) {
+            this.highlightPiece(moves[i]);
         }
+        this._highlightedPoints = moves;
+    }
+
+    mouseUp(event: MouseEvent) {
+        let point = this.parseToCoord(event);
+        let len = this._highlightedPoints.length;
+
+        // last index hold src piece
+        let src = this._highlightedPoints[len-1]
+        for(let i = 0; i < len-1; i++) {
+            let dest = this._highlightedPoints[i];
+            this.unhighlightPiece(dest);
+            // if valid dest than tell the logic
+            if((point._x == dest._x) && (point._y == dest._y) ){
+                let removePiece:Point[] = this._board.movePiece(src, dest);
+                this.drawPiece(dest, this._board.whoseTurn());
+                for(let p of removePiece) {
+                    this.removePiece(p);
+                }
+                this._board.nextTurn();
+            }
+        }
+        this._highlightedPoints = [];
     }
 
     parseToCoord(event: MouseEvent): Point {
@@ -82,12 +97,12 @@ class BoardView {
     populatePieces() {
         for(let y = 0; y < this.COLUMNS; y++) {
             for(let x = (y+1)%2; x < this.ROWS; x+=2) {
-                this.drawPiece(new Point(y, x), 0);
+                this.drawPiece(new Point(y, x), 1);
             }
         }
         for(let y = this.COLUMNS + 2; y < this.ROWS; y++) {
             for(let x = (y+1)%2; x < this.ROWS; x+=2) {
-                this.drawPiece(new Point(y, x), 1);
+                this.drawPiece(new Point(y, x), 0);
             }
         }
     }
