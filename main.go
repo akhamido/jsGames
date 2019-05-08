@@ -11,6 +11,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.Handle("/tictactoe/", http.StripPrefix("/tictactoe/", http.FileServer(http.Dir("./public/tictactoe"))))
+	http.Handle("/checkerboard/", http.StripPrefix("/checkerboard/", http.FileServer(http.Dir("./public/checkerboard"))))
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./public/home"))))
 	log.Println("Server is running...")
 	log.Fatal(http.ListenAndServe(":8000", nil))

@@ -43,6 +43,8 @@ export class Board implements IBoard {
 
     getMoves(point: Point): Point[] {
         let result: Point[] = []
+
+        // Check if user must take other piece
         for(let [_, piece] of this._pieces[this._turn]){
             let points:Point[] = piece.getTakeMoves();
             if(points.length != 0) {
@@ -54,6 +56,7 @@ export class Board implements IBoard {
             result.push(point);
             return result;
         }
+
         let piece = this.getPiece(point);
         // if that loc piece does not exist or it is not your piece
         if(piece == null || piece.getType() != this._turn) {
@@ -65,25 +68,23 @@ export class Board implements IBoard {
         }
     }
 
-
-
     movePiece(src: Point, dest: Point): Point[] {
         let result:Point[] = []
+        // if diff is more than 2 than it is take move
         let diff: Point = dest.subtract(src);
         diff.abs();
         let srcPiece = this.getPiece(src);
+
         if((diff._y == 1) && (diff._x == 1)) {
             srcPiece.setMove(dest);
         } else {
+            // gives pieces that were taken
             result = srcPiece.setTakeMove(dest);
             for(let p of result) {
-                console.log(p);
                 this._pieces[this.whoseTurnNext()].delete(p);
-                console.log(this._pieces);
             }
         }
         result.push(src);
-
         return result;
     }
 
@@ -99,8 +100,6 @@ export class Board implements IBoard {
         this._turn = this._turn + 1;
         this._turn = this._turn % 2;
     }
-
-
 
     /******************** Private functions *****************************/
     initBoard(): void {

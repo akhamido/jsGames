@@ -12,13 +12,14 @@ class BoardView {
     BOARD_COLORS: string[];
     PIECE_COLORS: string[];
     _highlightedPoints: Point[];
+    mouseEventListener: {(e:MouseEvent):void;}[];
 
     _board:Board;
 
     constructor() {
         this._canvas = <HTMLCanvasElement> document.getElementById('myCanvas');
         this._ctx = <CanvasRenderingContext2D>this._canvas.getContext('2d');
-        this.WIDTH = 600;
+        this.WIDTH = this._canvas.width;
         this.HEIGHT = 600;
         this.DELTA = this.WIDTH / 8;
         this.ROWS = 8;
@@ -34,13 +35,22 @@ class BoardView {
         this.populatePieces();
 
         // Handle piece click and piece move
+        // storing references to those so those can be removed for play again
+        this.mouseEventListener = [];
         let that = this;
-        this._canvas.addEventListener('mousedown', function(e) {that.mouseDown(e)});
-        this._canvas.addEventListener('mouseup', function(e) {that.mouseUp(e)});
+        let mousedown_ = function(e: MouseEvent) {that.mouseDown(e)}
+        this._canvas.addEventListener('mousedown', mousedown_);
+        let mouseup_ = function(e: MouseEvent) {that.mouseUp(e)}
+        this._canvas.addEventListener('mouseup', mouseup_);
+        this.mouseEventListener.push(mousedown_);
+        this.mouseEventListener.push(mouseup_);
+
+        this.displayTurn();
     }
 
     mouseDown(event: MouseEvent) {
         let point = this.parseToCoord(event);
+        console.log("Was clicked", point);
         let moves = this._board.getMoves(point);
         for(let i = 0; i < moves.length-1; i++) {
             this.highlightPiece(moves[i]);
@@ -57,6 +67,7 @@ class BoardView {
         for(let i = 0; i < len-1; i++) {
             let dest = this._highlightedPoints[i];
             this.unhighlightPiece(dest);
+            
             // if valid dest than tell the logic
             if((point._x == dest._x) && (point._y == dest._y) ){
                 let removePiece:Point[] = this._board.movePiece(src, dest);
@@ -65,6 +76,7 @@ class BoardView {
                     this.removePiece(p);
                 }
                 this._board.nextTurn();
+                this.displayTurn();
             }
         }
         this._highlightedPoints = [];
@@ -134,6 +146,33 @@ class BoardView {
     unhighlightPiece(p: Point) {
         this.removePiece(p);
     }
-}
 
-let bw = new BoardView();
+    displayTurn() {
+        let turnElm:HTMLElement = document.getElementById("whoseTurn");
+        let turn = "";
+        if(this._board.whoseTurn() == 0) {
+            turn = "White";
+        } else {
+            turn = "Black";
+        }
+        turnElm.innerHTML = turn;
+    }
+
+    removeEventListener() {
+        this._canvas.removeEventListener('mousedown', this.mouseEventListener[0]);
+        this._canvas.removeEventListener('mouseup', this.mouseEventListener[1]);
+    }
+}
+let bw:BoardView = null;
+let p = document.getElementById("playBtn");
+p.addEventListener("click", function(e) {
+    console.log("Clicked");
+    if(bw != null) {
+        console.log("hahsd");
+        bw.removeEventListener();
+    }
+    bw = new BoardView()
+    console.log(bw);
+});
+
+

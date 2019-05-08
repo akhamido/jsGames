@@ -74,8 +74,9 @@ export class Piece implements IPiece {
         this._board[diff._y][diff._x] = null;
         this._currPos.updatePoint(dest);
         return result;
-        /* ---------------- Private Functions ---------------- */
     }
+
+    /* ---------------- Private Functions ---------------- */
     getPiece(p: Point): IPiece {
         return this._board[p._y][p._x];
     }
