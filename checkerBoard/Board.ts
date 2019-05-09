@@ -2,7 +2,7 @@ import {Piece, IPiece, Point } from "./Piece";
 
 export interface IBoard {
     getMoves(point: Point): Point[];
-    movePiece(src: Point, dest: Point):Point[];
+    movePiece(src: Point, dest: Point):RC;
     whoseTurn(): number;
     nextTurn(): void;
     
@@ -68,8 +68,8 @@ export class Board implements IBoard {
         }
     }
 
-    movePiece(src: Point, dest: Point): Point[] {
-        let result:Point[] = []
+    movePiece(src: Point, dest: Point): RC {
+        let rc :RC = new RC();
         // if diff is more than 2 than it is take move
         let diff: Point = dest.subtract(src);
         diff.abs();
@@ -79,13 +79,31 @@ export class Board implements IBoard {
             srcPiece.setMove(dest);
         } else {
             // gives pieces that were taken
-            result = srcPiece.setTakeMove(dest);
-            for(let p of result) {
+            rc.removedPieces = srcPiece.setTakeMove(dest);
+            for(let p of rc.removedPieces) {
                 this._pieces[this.whoseTurnNext()].delete(p);
             }
+            this.checkWinner(rc);
         }
-        result.push(src);
-        return result;
+        // old position of the src to be removed
+        rc.removedPieces.push(src);
+        rc.color = srcPiece.getType();
+        this.nextTurn();
+        return rc;
+    }
+
+    /* 
+     * -1 - no winner
+     *  0 - bottom pieces won
+     *  1 - top pieces won
+     */
+    checkWinner(rc: RC) {
+        if(this._pieces[0].size == 0) {
+            rc.winner = 1; 
+        } else if(this._pieces[1].size == 0) {
+            rc.winner = 0;
+        }  
+        return rc;
     }
 
     whoseTurn(): number {
@@ -132,6 +150,17 @@ export class Board implements IBoard {
 
     getPiece(p: Point): IPiece {
         return this._board[p._y][p._x];
+    }
+}
+
+export class RC {
+    winner:number;
+    color:number;
+    removedPieces: Point[];
+    constructor(winner:number  = -1, color = 0, removedPieces:Point[] = []) {
+        this.winner = winner;
+        this.color = color;
+        this.removedPieces = removedPieces;
     }
 }
 

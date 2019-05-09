@@ -1,5 +1,5 @@
 import { Point } from "./Piece";
-import { Board } from "./Board";
+import { Board, RC } from "./Board";
 
 class BoardView {
     _ctx:CanvasRenderingContext2D;
@@ -70,13 +70,12 @@ class BoardView {
             
             // if valid dest than tell the logic
             if((point._x == dest._x) && (point._y == dest._y) ){
-                let removePiece:Point[] = this._board.movePiece(src, dest);
-                this.drawPiece(dest, this._board.whoseTurn());
-                for(let p of removePiece) {
+                let rc:RC = this._board.movePiece(src, dest);
+                this.drawPiece(dest, rc.color);
+                for(let p of rc.removedPieces) {
                     this.removePiece(p);
                 }
-                this._board.nextTurn();
-                this.displayTurn();
+                this.display(rc.winner);
             }
         }
         this._highlightedPoints = [];
@@ -147,6 +146,27 @@ class BoardView {
         this.removePiece(p);
     }
 
+    display(winner:number) {
+        if(winner == -1) {
+            this.displayTurn()
+        } else {
+            let winnerDisplay = document.getElementById("winnerDisplay");
+            let playBtn = document.getElementById("playBtn");
+            if(winner == 1) {
+                winnerDisplay.innerText = "Black Won: Play again"
+            } else {
+                winnerDisplay.innerText = "White Won: Play again"
+            }
+            playBtn.innerText = "Play again";
+            this.removeEventListener();
+        }
+    }
+    
+    removeText() {
+        let winnerDisplay = document.getElementById("winnerDisplay");
+        winnerDisplay.innerText = "";
+    }
+
     displayTurn() {
         let turnElm:HTMLElement = document.getElementById("whoseTurn");
         let turn = "";
@@ -166,13 +186,10 @@ class BoardView {
 let bw:BoardView = null;
 let p = document.getElementById("playBtn");
 p.addEventListener("click", function(e) {
-    console.log("Clicked");
     if(bw != null) {
-        console.log("hahsd");
-        bw.removeEventListener();
+        bw.removeText();
     }
     bw = new BoardView()
-    console.log(bw);
 });
 
 
